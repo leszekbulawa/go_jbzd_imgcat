@@ -8,8 +8,18 @@ import (
 )
 
 func main() {
-	// Make HTTP GET request
-	response, err := http.Get("https://jbzd.pl")
+	// Create http client
+	client := &http.Client{}
+
+	// Create custom http request
+	request, err := http.NewRequest("GET", "https://jbzd.pl", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	request.Header.Set("User-Agent", "Jbzd Imgcat - https://github.com/leszekbulawa/go_jbzd_imgcat")
+
+	// Make http GET request
+	response, err := client.Do(request)
 	if err != nil {
 		log.Fatal(err)
 	}
