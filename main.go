@@ -1,10 +1,12 @@
 package main
 
 import (
-	"io"
+	"io/ioutil"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -25,10 +27,29 @@ func main() {
 	}
 	defer response.Body.Close()
 
-	// Copy data from the response to standard output
-	n, err := io.Copy(os.Stdout, response.Body)
-	if err != nil {
-		log.Fatal(err)
+	// Get response body as string
+	dataInBytes, err := ioutil.ReadAll(response.Body)
+	pageContent := string(dataInBytes)
+
+	// Find title substring
+	titleStartIndex := strings.Index(pageContent, "<title>")
+	if titleStartIndex == -1 {
+		fmt.Println("No title element found")
+		os.Exit(0)
 	}
-	log.Println("Number of bytes copied to STDOUT:", n)
+	// Title offset to exclude <title>
+	titleStartIndex += 7
+
+	// Find index of title closing tag
+	titleEndIndex := strings.Index(pageContent, "</title>")
+	if titleEndIndex == -1 {
+		fmt.Println("No title closing found")
+		os.Exit(0)
+	}
+
+	// Copy title do separate variable to let GC wipe whole doc
+	pageTitle := []byte(pageContent[titleStartIndex:titleEndIndex])
+
+	// Print result
+	fmt.Printf("Page title: %s\n", pageTitle)
 }
