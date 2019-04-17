@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -52,4 +53,15 @@ func main() {
 
 	// Print result
 	fmt.Printf("Page title: %s\n", pageTitle)
+
+	// Regex to find image urls
+	re := regexp.MustCompile("<img src.*>")
+	imageUrls := re.FindAllString(pageContent, -1)
+	if imageUrls == nil {
+		fmt.Println("No matches.")
+	} else {
+		for _, imageUrl := range imageUrls {
+			fmt.Println(imageUrl)
+		}
+	}
 }
