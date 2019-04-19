@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -32,13 +34,19 @@ func main() {
 		log.Fatal("Error loading HTTP response body. ", err)
 	}
 
+	imageUrls := []string{}
+
 	// Find and print image URLs
-	document.Find("img").Each(func(index int, element *goquery.Selection) {
+	document.Find(".resource-image").Each(func(index int, element *goquery.Selection) {
 		imgSrc, exists := element.Attr("src")
 		if exists {
-			fmt.Println(imgSrc)
+			imageUrls = append(imageUrls, imgSrc)
 		}
 	})
-
-
+	fmt.Println(len(imageUrls))
+	// Draw random image
+	rand.Seed(time.Now().UnixNano())
+	x := rand.Intn(len(imageUrls))
+	fmt.Println(x)
+	fmt.Println(imageUrls[x])
 }
