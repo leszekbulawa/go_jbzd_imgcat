@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -43,10 +45,30 @@ func main() {
 			imageUrls = append(imageUrls, imgSrc)
 		}
 	})
-	fmt.Println(len(imageUrls))
 	// Draw random image
 	rand.Seed(time.Now().UnixNano())
-	x := rand.Intn(len(imageUrls))
-	fmt.Println(x)
-	fmt.Println(imageUrls[x])
+	fmt.Println(imageUrls[rand.Intn(len(imageUrls))])
+
+	// Get image content
+	image_request, err := http.NewRequest("GET", imageUrls[rand.Intn(len(imageUrls))], nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	request.Header.Set("User-Agent", "Jbzd Imgcat - https://github.com/leszekbulawa/go_jbzd_imgcat")
+
+	resp, err := client.Do(image_request)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	image_data, err := ioutil.ReadAll(resp.Body)
+	if err != nil{
+		log.Fatal(err)
+	}
+
+	image_b64_data := base64.StdEncoding.EncodeToString(image_data)
+	fmt.Println(len(image_b64_data))
+
+	// Print image to terminal
+	fmt.Printf("\033]1337;File=;size=%d;inline=1:%s%s", len(image_b64_data), image_b64_data, "\a\n")
 }
