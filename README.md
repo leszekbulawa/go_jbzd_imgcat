@@ -17,3 +17,5 @@ https://github.com/leszekbulawa/go_jbzd_imgcat
 - improve range and randomness of images
 - support more terminal emulators
 - exception handling and code quality :)
+- write a test
+- pin goquery version
