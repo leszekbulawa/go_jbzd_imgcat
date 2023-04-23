@@ -8,7 +8,13 @@ Currently it only supports iTerm2.
 https://github.com/leszekbulawa/go_jbzd_imgcat
 
 ## Installation
-`go get github.com/leszekbulawa/go_jbzd_imgcat`
+1. Make sure that go `/bin` is added to the `PATH`:
+
+`export PATH=$PATH:$(go env GOPATH)/bin`
+
+2. Install package
+
+`go install github.com/leszekbulawa/go_jbzd_imgcat@latest`
 
 ## Usage
 `go_jbzd_imgcat`

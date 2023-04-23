@@ -3,72 +3,80 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
-	"time"
 
 	"github.com/PuerkitoBio/goquery"
 )
+
+const URL = "https://jbzd.com.pl"
+const userAgent = "Jbzd Imgcat - https://github.com/leszekbulawa/go_jbzd_imgcat"
 
 func main() {
 	// Create http client
 	client := &http.Client{}
 
 	// Get jbzd main page
-	main_page := imgcat_get_request("https://jbzd.pl", client)
-	defer main_page.Body.Close()
+	mainPage := imgcatGetRequest(URL, client)
+	defer mainPage.Body.Close()
 
 	// Create a goquery document from the HTTP response
-	document, err := goquery.NewDocumentFromReader(main_page.Body)
+	doc, err := goquery.NewDocumentFromReader(mainPage.Body)
 	if err != nil {
 		log.Fatal("Error loading HTTP response body. ", err)
 	}
 
-	imageUrls := []string{}
+	imageURLs := []string{}
 
 	// Find and print image URLs
-	document.Find(".resource-image").Each(func(index int, element *goquery.Selection) {
-		imgSrc, exists := element.Attr("src")
+	doc.Find("div.article-image.article-media-image").Each(func(i int, s *goquery.Selection) {
+		src, exists := s.Find("img").Attr("src")
 		if exists {
-			imageUrls = append(imageUrls, imgSrc)
+			imageURLs = append(imageURLs, src)
 		}
 	})
 
-	// Seed for random int generator
-	rand.Seed(time.Now().UnixNano())
+	if len(imageURLs) == 0 {
+		log.Fatal("No images found")
+	}
+
+	// Choose random image
+	chosenImage := imageURLs[rand.Intn(len(imageURLs))]
 
 	// Get image
-	image := imgcat_get_request(imageUrls[rand.Intn(len(imageUrls))], client)
+	image := imgcatGetRequest(chosenImage, client)
 	defer image.Body.Close()
 
 	// Get image content
-	image_data, err := ioutil.ReadAll(image.Body)
-	if err != nil{
-		log.Fatal(err)
+	imageData, err := io.ReadAll(image.Body)
+	if err != nil {
+		log.Fatal("Error getting image content", err)
 	}
 
 	// Convert image to base64
-	image_b64_data := base64.StdEncoding.EncodeToString(image_data)
+	imageB64Data := base64.StdEncoding.EncodeToString(imageData)
 
 	// Print image to terminal with magic header
-	fmt.Printf("\033]1337;File=;size=%d;inline=1:%s%s", len(image_b64_data), image_b64_data, "\a\n")
-
+	fmt.Printf("\033]1337;File=;size=%d;inline=1:%s%s", len(imageB64Data), imageB64Data, "\a\n")
 }
 
-func imgcat_get_request(url string, client *http.Client) *http.Response {
+func imgcatGetRequest(URL string, client *http.Client) *http.Response {
 	// Create custom http request
-	request, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", URL, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-	request.Header.Set("User-Agent", "Jbzd Imgcat - https://github.com/leszekbulawa/go_jbzd_imgcat")
+	req.Header.Set("User-Agent", userAgent)
 
 	// Make http GET request
-	response, err := client.Do(request)
+	res, err := client.Do(req)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return response
+	if res.StatusCode != 200 {
+		log.Fatalf("Request error: %s %s", URL, res.Status)
+	}
+	return res
 }
